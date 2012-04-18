@@ -191,7 +191,7 @@
 		var fpMap = {}; // field @ property
 		var fmMap = {}; // field @ method
 
-		$.each( prop, function ( key, value ) {
+		each( prop, function ( key, value ) {
 			if ( prop.hasOwnProperty( key ) ) {
 				if ( isFunction( value ) ) {
 					fmMap[ key ] = value;
