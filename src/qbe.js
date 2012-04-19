@@ -52,7 +52,7 @@
     var isExistNameSpaceInCache = function ( name ) { return !isUndefined( nameSpaceCache[ name ] ); };
     var setNameSpaceInCache = function ( name, obj ) {
         if ( isValidNameSpaceFormat( name ) )
-            return nameSpaceCache[ name ] = obj;
+            return ( nameSpaceCache[ name ] = obj );
         else
             return false;
     };
@@ -64,51 +64,7 @@
         }
     };
 
-    // NAME SPACE @ GLOBAL
-    var createNameSpaceInGlobal = function ( obj, name ) {
-        if ( arguments.length < 2 || isString( obj ) || isArray( obj ) ) {
-            name = obj;
-            obj = global;
-        }
-        if ( isString(name) ) {
-            name = parseNameSpace( name );
-        }
-        var i = 0,
-                l = name.length,
-                to;
-        while ( i < l ) {
-            to = name[ i++ ];
-            obj = obj[ to ] = obj[ to ] || {};
-        }
-        return obj;
-    };
-    var getNameSpaceInGlobal = function ( obj, name ) {
-        if ( arguments.length < 2 || isString(obj) || isArray(obj) ) {
-            name = obj;
-            obj = global;
-        }
-        if ( isString(name) ) {
-            name = parseNameSpace( name );
-        }
-        var i = 0,
-                l = name.length;
-        while ( i < l ) {
-            obj = obj[ name[i++] ];
-            if ( isUndefined( obj ) ) {
-                throw new Error( 'not exist namespace at global' );
-            }
-        }
-        return obj;
-    };
-    var setNameSpaceInGlobal = function ( name, obj ) {
-        var arr = parseNameSpace( name ),
-                name = arr.pop(),
-                from = createNameSpaceInGlobal( arr.join('.') );
-        return from[ name ] = obj;
-    };
-
     var setNameSpace = function( name, obj ) {
-        setNameSpaceInGlobal( name, obj );
         setNameSpaceInCache( name, obj );
         return obj;
     };
@@ -116,7 +72,7 @@
         if ( isExistNameSpaceInCache( name ) ) {
             return getNameSpaceInCache( name );
         } else {
-            return setNameSpaceInCache( name, getNameSpaceInGlobal( name ) );
+            throw new Error( name + ' is not exist in namespace cache')
         }
     };
 
@@ -230,6 +186,7 @@
         "each" : each,
         "ns" : {
             "isValidFormat" : isValidNameSpaceFormat,
+            "isExist" : isExistNameSpaceInCache,
             "set" : setNameSpace,
             "get" : getNameSpace
         },
