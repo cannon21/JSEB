@@ -44,52 +44,6 @@
 
         return object;
     };
-
-    // NAME SPACE
-    var nameSpaceCache = {};
-    var NameSpaceREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
-    var isValidNameSpaceFormat = function( name ) {
-        return NameSpaceREGEXP.test( name );
-    };
-    var parseNameSpace = function( name ) {
-        if ( !isString( name ) ) {
-            throw new Error( 'namespace must be string.' );
-        } else if ( !isValidNameSpaceFormat( name ) ) {
-            throw new Error( 'illegal namespace format' );
-        }
-        return name.split( '.' );
-    };
-
-    // NAME SPACE @ CACHE
-    var isExistNameSpaceInCache = function( name ) {
-        return !isUndefined( nameSpaceCache[ name ] );
-    };
-    var setNameSpaceInCache = function( name, obj ) {
-        if ( isValidNameSpaceFormat( name ) )
-            return ( nameSpaceCache[ name ] = obj );
-        else
-            return false;
-    };
-    var getNameSpaceInCache = function( name ) {
-        if ( isValidNameSpaceFormat( name ) && isExistNameSpaceInCache( name ) ) {
-            return nameSpaceCache[ name ];
-        } else {
-            throw new Error( 'not exist namespace at cache' );
-        }
-    };
-
-    var setNameSpace = function( name, obj ) {
-        return setNameSpaceInCache( name, obj );
-    };
-    var getNameSpace = function( name ) {
-        if ( isExistNameSpaceInCache( name ) ) {
-            return getNameSpaceInCache( name );
-        } else {
-            throw new Error( name + ' is not exist in namespace cache' )
-        }
-    };
-
-    // CLASS INHERITANCE
     var isPlainObject = function( obj ) {
         if ( !obj || typeof obj !== 'object' || obj.nodeType || obj === window ) {
             return false;
@@ -153,9 +107,74 @@
 
         return target;
     };
+
+    // NAME SPACE
+    var nameSpaceCache = {};
+    var nameSpaceREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+    var isValidNameSpaceFormat = function( name ) {
+        return nameSpaceREGEXP.test( name );
+    };
+
+    // NAME SPACE @ CACHE
+    var isExistNameSpaceInCache = function( name ) {
+        return !isUndefined( nameSpaceCache[ name ] );
+    };
+    var setNameSpaceInCache = function( name, obj ) {
+        if ( !isValidNameSpaceFormat( name ) ) {
+            throw new Error( 'invalid namespace format @ ' + name );
+        } else if ( isExistNameSpaceInCache( name ) ) {
+            throw new Error( 'namespace are exist @ ' + name );
+        } else {
+            return ( nameSpaceCache[ name ] = obj );
+        }
+    };
+    var getNameSpaceInCache = function( name ) {
+        if ( !isValidNameSpaceFormat( name ) ) {
+            throw new Error( 'invalid namespace format @ ' + name );
+        } else if ( isExistNameSpaceInCache( name ) ) {
+            throw new Error( 'namespace not exist @ ' + name );
+        } else {
+            return nameSpaceCache[ name ];
+        }
+    };
+
+    var setNameSpace = function( name, obj ) {
+        return setNameSpaceInCache( name, obj );
+    };
+    var getNameSpace = function( name ) {
+        return getNameSpaceInCache( name );
+    };
+
+    // CLASS INHERITANCE
     var classConstructorName = "init",
+        classPackageDefinitionKey = "$package",
         emptyFunction = function() {},
         classDefinitionStore = {};
+    var classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+    var isValidClassPackageFormat = function( name ) {
+        return classPackageREGEXP.test( name );
+    };
+    var isExistClassPackage = function( packageName ) {
+        return !isUndefined( classDefinitionStore[ classPackage ] )
+    };
+    var setClassPackage = function( packageName, obj ) {
+        if ( !isValidClassPackageFormat( packageName ) ) {
+            throw new Error( 'invalid class package name format @ ' + packageName );
+        } else if ( isExistClassPackage( packageName ) ) {
+            throw new Error( 'class package are exist @ ' + packageName );
+        } else {
+            return ( classDefinitionStore[ packageName ] = obj );
+        }
+    };
+    var getClassPackage = function( packageName ) {
+        if ( !isValidClassPackageFormat( packageName ) ) {
+            throw new Error( 'invalid class package name format @ ' + packageName );
+        } else if ( isExistClassPackage( packageName ) ) {
+            throw new Error( 'class package not exist @ ' + packageName );
+        } else {
+            return classDefinitionStore[ packageName ];
+        }
+    };
     var classDefine = function( parent, prop ) {
         if ( arguments.length < 2 ) {
             prop = parent;
@@ -202,7 +221,7 @@
     var classExtend = function() {
         //
     };
-    var getClassMethod = function( className, classMethodName ) {
+    var getClassMethod = function( classPackageName, classMethodName ) {
         //
     };
     var createClassInstance = function( namespace ) {
@@ -211,6 +230,24 @@
 
     var QbigEngine = {
         "each" : each,
+        "util" : {
+            "type" : {
+                "isInstanceOf" : isInstanceOf,
+                "isTypeOf" : isTypeOf,
+                "isFunction" : isFunction,
+                "isObject" : isObject,
+                "isArray" : isArray,
+                "isBool" : isBool,
+                "isNumber" : isNumber,
+                "isString" : isString,
+                "isNull" : isNull,
+                "isUndefined" : isUndefined,
+                "isNumeric" : isNumeric,
+                "isPlainObject" : isPlainObject
+            },
+            "unify" : unify,
+            "each" : each
+        },
         "ns" : {
             "isValidFormat" : isValidNameSpaceFormat,
             "isExist" : isExistNameSpaceInCache,
