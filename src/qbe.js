@@ -181,6 +181,21 @@
         child.prototype.constructor = child;
         return child;
     };
+    var classConstant = {
+      "TYPE" : {
+        "CLASS" : "CLASS",
+        "ABSTRACT" : "ABSTRACT",
+        "INTERFACE" : "INTERFACE"
+      },
+      "ACCESS" : {
+        "PUBLIC" : "PUBLIC",
+        "PRIVATE" : "PRIVATE",
+        "PROTECTED" : "PROTECTED"
+      }
+    };
+    var classDefine = function() {
+      
+    };
 
     var QbigEngine = {
         "each" : each,
@@ -191,7 +206,9 @@
             "get" : getNameSpace
         },
         "class" : {
-            "extend" : extend
+          "constant" : classConstant,
+          "define" : classDefine,
+          "extend" : extend
         }
     };
     global.qbe = QbigEngine;
