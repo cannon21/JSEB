@@ -156,29 +156,29 @@
     var classConstructorName = "init",
         emptyFunction = function() {},
         classDefinitionStore = {};
-    var extend = function( parent, prop ) {
+    var classDefine = function( parent, prop ) {
         if ( arguments.length < 2 ) {
             prop = parent;
             parent = {};
         }
         parent = parent || {};
 
-        var fpMap = {}; // field @ property
-        var fmMap = {}; // field @ method
+        var $properties = {},
+            $methods = {};
 
         each( prop, function( key, value ) {
             if ( prop.hasOwnProperty( key ) ) {
                 if ( isFunction( value ) ) {
-                    fmMap[ key ] = value;
+                    $methods[ key ] = value;
                 } else {
-                    fpMap[ key ] = value;
+                    $properties[ key ] = value;
                 }
             }
         } );
 
         var child = function() {
             ( function( self ) {
-                unify( self, ( child.prototype && child.prototype.$fpMap ) || {} );
+                unify( self, ( child.prototype && child.prototype.$properties ) || {} );
 
                 if ( child.prototype.hasOwnProperty( classConstructorName ) ) {
                     child.prototype.init.apply( self, arguments );
@@ -188,20 +188,25 @@
             } )( this );
         };
         var Class = function() { /* ANONYMOUS FUNCTION */ };
-        // Class.prototype = unify( {}, ( parent.prototype || {} ));
 
         child.prototype = new Class();
-        unify( child.prototype, ( ( parent.prototype && parent.prototype.$fmMap ) || {} ), fmMap );
+        unify( child.prototype, ( ( parent.prototype && parent.prototype.$methods ) || {} ), $methods );
 
-        child.prototype.$fpMap = unify( {}, ( ( parent.prototype && parent.prototype.$fpMap ) || {} ), fpMap );
-        child.prototype.$fmMap = unify( {}, ( ( parent.prototype && parent.prototype.$fmMap ) || {} ), fmMap );
-        child.prototype.$super = ( parent.prototype && parent.prototype.$fmMap ) || {};
+        child.prototype.$properties = unify( {}, ( ( parent.prototype && parent.prototype.$properties ) || {} ), $properties );
+        child.prototype.$methods = unify( {}, ( ( parent.prototype && parent.prototype.$methods ) || {} ), $methods );
+        child.prototype.$super = ( parent.prototype && parent.prototype.$methods ) || {};
 
         child.prototype.constructor = child;
         return child;
     };
-    var classDefine = function() {
-
+    var classExtend = function() {
+        //
+    };
+    var getClassMethod = function( className, classMethodName ) {
+        //
+    };
+    var createClassInstance = function( namespace ) {
+        //
     };
 
     var QbigEngine = {
@@ -214,7 +219,9 @@
         },
         "class" : {
             "define" : classDefine,
-            "extend" : extend
+            "extend" : classExtend,
+            "getMethod" : getClassMethod,
+            "create" : createClassInstance
         }
     };
     global.qbe = QbigEngine;
