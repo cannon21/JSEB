@@ -125,18 +125,17 @@
             throw new Error( 'invalid namespace format @ ' + name );
         } else if ( isExistNameSpaceInCache( name ) ) {
             throw new Error( 'namespace are exist @ ' + name );
-        } else {
-            return ( nameSpaceCache[ name ] = obj );
         }
+        nameSpaceCache[ name ] = obj;
+        return name;
     };
     var getNameSpaceInCache = function( name ) {
         if ( !isValidNameSpaceFormat( name ) ) {
             throw new Error( 'invalid namespace format @ ' + name );
         } else if ( isExistNameSpaceInCache( name ) ) {
             throw new Error( 'namespace not exist @ ' + name );
-        } else {
-            return nameSpaceCache[ name ];
         }
+        return nameSpaceCache[ name ];
     };
 
     var setNameSpace = function( name, obj ) {
