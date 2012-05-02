@@ -20,7 +20,27 @@
         isString = function( target ) { return isTypeOf( target, 'string' ); },
         isNull = function( target ) { return target === null; },
         isUndefined = function( target ) { return target === undefined; },
-        isNumeric = function( target ) { return !isNaN( parseFloat( target ) ) && isFinite( target ); };
+        isNumeric = function( target ) { return !isNaN( parseFloat( target ) ) && isFinite( target ); },
+        isPlainObject = function( obj ) {
+            if ( !obj || typeof obj !== 'object' || obj.nodeType || obj === window ) {
+                return false;
+            }
+
+            try {
+                var hasOwn = Object.prototype.hasOwnProperty;
+                if ( obj.constructor && !hasOwn.call( obj, "constructor" ) && !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
+                    return false;
+                }
+            } catch ( e ) {
+                return false;
+            }
+
+            var key;
+            for ( key in obj ) {
+            }
+
+            return key === undefined || hasOwn.call( obj, key );
+        };
 
     // BASE UTILITY FUNCTION
     var each = function( object, callback ) {
@@ -44,27 +64,8 @@
 
         return object;
     };
-    var isPlainObject = function( obj ) {
-        if ( !obj || typeof obj !== 'object' || obj.nodeType || obj === window ) {
-            return false;
-        }
 
-        try {
-            var hasOwn = Object.prototype.hasOwnProperty;
-            if ( obj.constructor && !hasOwn.call( obj, "constructor" ) && !hasOwn.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
-                return false;
-            }
-        } catch ( e ) {
-            return false;
-        }
-
-        var key;
-        for ( key in obj ) {
-        }
-
-        return key === undefined || hasOwn.call( obj, key );
-    };
-    var unify = function() { // only deep copy
+    var unify = function() {
         var argv = Array.prototype.slice.call( arguments ),
             i = 1,
             length = argv.length,
@@ -147,85 +148,118 @@
 
     // CLASS INHERITANCE
     var classConstructorName = "init",
-        classPackageDefinitionKey = "$package",
-        emptyFunction = function() {},
-        classDefinitionStore = {};
-    var classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+        classDefinitionStore = {},
+        classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
     var isValidClassPackageFormat = function( name ) {
         return classPackageREGEXP.test( name );
     };
     var isExistClassPackage = function( packageName ) {
         return !isUndefined( classDefinitionStore[ classPackage ] )
     };
-    var setClassPackage = function( packageName, obj ) {
+    var setClassDefinition = function( packageName, obj ) {
         if ( !isValidClassPackageFormat( packageName ) ) {
             throw new Error( 'invalid class package name format @ ' + packageName );
         } else if ( isExistClassPackage( packageName ) ) {
             throw new Error( 'class package are exist @ ' + packageName );
-        } else {
-            return ( classDefinitionStore[ packageName ] = obj );
         }
+        classDefinitionStore[ packageName ] = obj;
+        return packageName;
     };
-    var getClassPackage = function( packageName ) {
+    var getClassDefinition = function( packageName ) {
         if ( !isValidClassPackageFormat( packageName ) ) {
             throw new Error( 'invalid class package name format @ ' + packageName );
-        } else if ( isExistClassPackage( packageName ) ) {
+        } else if ( !isExistClassPackage( packageName ) ) {
             throw new Error( 'class package not exist @ ' + packageName );
-        } else {
-            return classDefinitionStore[ packageName ];
         }
+        return classDefinitionStore[ packageName ];
     };
-    var classDefine = function( parent, prop ) {
-        if ( arguments.length < 2 ) {
-            prop = parent;
-            parent = {};
+    var makeClass = function( classPackageName, parentsPackageNameArr, classDefinition ) {
+        var definitionObj = {
+            "$properties" : {},
+            "$methods" : {},
+            "$constructor" : false,
+            "$class" : false
+        };
+
+        if ( isArray( parentsPackageNameArr ) ) {
+            each( parentsPackageNameArr, function( idx, parentsPackageName ) {
+                var classDefinition = getClassDefinition( parentsPackageName );
+                unify( definitionObj.$properties, classDefinition.$properties );
+                unify( definitionObj.$methods, classDefinition.$methods );
+            } );
         }
-        parent = parent || {};
 
-        var $properties = {},
-            $methods = {};
-
-        each( prop, function( key, value ) {
-            if ( prop.hasOwnProperty( key ) ) {
+        each( classDefinition, function( key, value ) {
+            if ( classDefinition.hasOwnProperty( key ) ) {
                 if ( isFunction( value ) ) {
-                    $methods[ key ] = value;
+                    if ( key === classConstructorName ) {
+                        definitionObj.$constructor = value;
+                    } else {
+                        definitionObj.$methods[ key ] = value;
+                    }
                 } else {
-                    $properties[ key ] = value;
+                    definitionObj.$properties[ key ] = value;
                 }
             }
         } );
 
         var child = function() {
             ( function( self ) {
-                unify( self, ( child.prototype && child.prototype.$properties ) || {} );
-
-                if ( child.prototype.hasOwnProperty( classConstructorName ) ) {
-                    child.prototype.init.apply( self, arguments );
-                } else if ( child.prototype.$super && child.prototype.$super.hasOwnProperty( classConstructorName ) ) {
-                    child.prototype.$super.init.apply( self, arguments );
+                unify( self, definitionObj.$properties );
+                if ( isFunction( definitionObj.$constructor ) ) {
+                    definitionObj.$constructor.apply( self, arguments );
                 }
             } )( this );
         };
         var Class = function() { /* ANONYMOUS FUNCTION */ };
 
         child.prototype = new Class();
-        unify( child.prototype, ( ( parent.prototype && parent.prototype.$methods ) || {} ), $methods );
-
-        child.prototype.$properties = unify( {}, ( ( parent.prototype && parent.prototype.$properties ) || {} ), $properties );
-        child.prototype.$methods = unify( {}, ( ( parent.prototype && parent.prototype.$methods ) || {} ), $methods );
-        child.prototype.$super = ( parent.prototype && parent.prototype.$methods ) || {};
-
+        unify( child.prototype, definitionObj.$methods );
         child.prototype.constructor = child;
-        return child;
+
+        definitionObj.$class = child;
+        setClassDefinition( classPackageName, definitionObj );
+        return classPackageName;
     };
-    var classExtend = function() {
-        //
+    var defineClass = function( classDefinition ) {
+        var classPackageName = false,
+            parentsPackageNameArr = false;
+
+        if ( isUndefined( classDefinition.$package ) || !isString( classDefinition.$package ) ) {
+            throw new Error( 'class package name must be string' );
+        }
+        classPackageName = classDefinition.$package;
+        delete classDefinition.$package;
+
+        if ( isArray( classDefinition.$parents ) ) {
+            var is_valid = true;
+            each( classDefinition.$parents, function( idx, parentsPackageName ) {
+                if ( !isString( parentsPackageName ) ) {
+                    is_valid = false;
+                    return false;
+                }
+            } );
+            if ( !is_valid ) {
+                throw new Error( 'parent class package name must be string' );
+            }
+            parentsPackageNameArr = classDefinition.$parents;
+            delete classDefinition.$parents;
+        } else if ( !isUndefined( classDefinition.$parents ) ) {
+            throw new Error( 'parent class package name must be array passed' );
+        }
+
+        return makeClass( classPackageName, parentsPackageNameArr, classDefinition );
     };
-    var getClassMethod = function( classPackageName, classMethodName ) {
-        //
+    var applyClassMethod = function( classPackageName, classMethodName, argumentsArr ) {
+        var classDefinition = getClassDefinition( classPackageName ),
+            method = classDefinition.$methods[ classMethodName ];
+        if ( !isFunction( method ) ) {
+            throw new Error( 'not exist method in class definition @ ' + classPackageName );
+        }
+        return method.apply( arguments.caller, argumentsArr );
     };
-    var createClassInstance = function( namespace ) {
-        //
+    var createClassInstance = function( classPackageName ) {
+        return new ( getClassDefinition( classPackageName ).$class );
     };
 
     var QbigEngine = {
@@ -255,9 +289,8 @@
             "get" : getNameSpace
         },
         "class" : {
-            "define" : classDefine,
-            "extend" : classExtend,
-            "getMethod" : getClassMethod,
+            "define" : defineClass,
+            "applyMethod" : applyClassMethod,
             "create" : createClassInstance
         }
     };
