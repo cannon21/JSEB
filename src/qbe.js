@@ -148,12 +148,12 @@
     // CLASS INHERITANCE
     var classConstructorName = "init",
         classDefinitionStore = {},
-        classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+        classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*(\/{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
     var isValidClassPackageFormat = function( name ) {
         return classPackageREGEXP.test( name );
     };
     var isExistClassPackage = function( packageName ) {
-        return !isUndefined( classDefinitionStore[ classPackage ] )
+        return !isUndefined( classDefinitionStore[ packageName ] )
     };
     var setClassDefinition = function( packageName, obj ) {
         if ( !isValidClassPackageFormat( packageName ) ) {
@@ -203,12 +203,13 @@
         } );
 
         var child = function() {
-            ( function( self ) {
+            var argv = Array.prototype.slice.call( arguments );
+            ( function( self, argv ) {
                 unify( self, definitionObj.$properties );
                 if ( isFunction( definitionObj.$constructor ) ) {
-                    definitionObj.$constructor.apply( self, arguments );
+                    definitionObj.$constructor.apply( self, argv );
                 }
-            } )( this );
+            } )( this, argv );
         };
         var Class = function() { /* ANONYMOUS FUNCTION */ };
 
