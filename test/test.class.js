@@ -1,6 +1,6 @@
 test('class define', function() {
     qbe.class.define({
-        "$package" : "com.qbigstudio.test/testStack",
+        "$package" : "com.qbigstudio.test/ds/stack",
         "data" : [],
         "limit" : 3,
         "curr" : 0,
@@ -31,7 +31,7 @@ test('class define', function() {
         }
     });
 
-    var stack = qbe.class.create("com.qbigstudio.test/testStack");
+    var stack = qbe.class.create("com.qbigstudio.test/ds/stack");
 
     strictEqual(true, stack.push(1), "push 1");
     strictEqual(1, stack.getLength(), "length 1");
