@@ -83,3 +83,7 @@ test('class define', function() {
     strictEqual(true, stack['__proto__'].hasOwnProperty("push"));
     strictEqual(true, stack['__proto__'].hasOwnProperty("pop"));
 });
+
+test('class extends', function() {
+    //
+});
