@@ -191,11 +191,7 @@
         each( classDefinition, function( key, value ) {
             if ( classDefinition.hasOwnProperty( key ) ) {
                 if ( isFunction( value ) ) {
-                    if ( key === classConstructorName ) {
-                        definitionObj.$constructor = value;
-                    } else {
-                        definitionObj.$methods[ key ] = value;
-                    }
+                    definitionObj.$methods[ key ] = value;
                 } else {
                     definitionObj.$properties[ key ] = value;
                 }
@@ -203,13 +199,9 @@
         } );
 
         var child = function() {
-            var argv = Array.prototype.slice.call( arguments );
-            ( function( self, argv ) {
+            ( function( self ) {
                 unify( self, definitionObj.$properties );
-                if ( isFunction( definitionObj.$constructor ) ) {
-                    definitionObj.$constructor.apply( self, argv );
-                }
-            } )( this, argv );
+            } )( this );
         };
         var Class = function() { /* ANONYMOUS FUNCTION */ };
 
@@ -258,8 +250,14 @@
         }
         return method.apply( arguments.caller, argumentsArr );
     };
-    var createClassInstance = function( classPackageName ) {
-        return new ( getClassDefinition( classPackageName ).$class );
+    var createClassInstance = function( classPackageName, constructorArgv ) {
+        var definition = getClassDefinition( classPackageName ),
+            instantce = new ( definition.$class );
+        constructorArgv = isArray( constructorArgv ) ? constructorArgv : [];
+        if ( isFunction( definition.$methods[classConstructorName] ) ) {
+            definition.$methods[classConstructorName].apply( instantce, constructorArgv );
+        }
+        return instantce;
     };
 
     var QbigEngine = {
