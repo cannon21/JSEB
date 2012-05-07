@@ -242,20 +242,21 @@
 
         return makeClass( classPackageName, parentsPackageNameArr, classDefinition );
     };
-    var applyClassMethod = function( classPackageName, classMethodName, argumentsArr ) {
+    var applyClassMethod = function( classPackageName, classMethodName, argumentsArr, instance ) {
         var classDefinition = getClassDefinition( classPackageName ),
             method = classDefinition.$methods[ classMethodName ];
+        instance = ( isObject( instance ) ) ? instance : arguments.caller;
         if ( !isFunction( method ) ) {
             throw new Error( 'not exist method in class definition @ ' + classPackageName );
         }
-        return method.apply( arguments.caller, argumentsArr );
+        return method.apply( instance, argumentsArr );
     };
     var createClassInstance = function( classPackageName, constructorArgv ) {
         var definition = getClassDefinition( classPackageName ),
             instantce = new ( definition.$class );
         constructorArgv = isArray( constructorArgv ) ? constructorArgv : [];
-        if ( isFunction( definition.$methods[classConstructorName] ) ) {
-            definition.$methods[classConstructorName].apply( instantce, constructorArgv );
+        if ( isFunction( definition.$methods[ classConstructorName ] ) ) {
+            applyClassMethod( classPackageName, classConstructorName, constructorArgv, instantce );
         }
         return instantce;
     };
