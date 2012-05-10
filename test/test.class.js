@@ -110,7 +110,7 @@ test('class extends', function() {
 
     qbe.class.define( {
         "$package" : "com.qbigstudio.test/extend/childClass",
-        "$parent" : [ "com.qbigstudio.test/extend/parentClass" ],
+        "$parents" : [ "com.qbigstudio.test/extend/parentClass" ],
         "name" : "child",
         "getName" : function() {
             return "[ " + this.name + " ]";
