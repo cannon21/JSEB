@@ -147,71 +147,84 @@
 
     // CLASS INHERITANCE
     var classConstructorName = "init",
-        classDefinitionStore = {},
+        classBlueprintStore = {},
         classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*(\/{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+    var Class = function() { /* ANONYMOUS FUNCTION */ },
+        isClass = function( obj ) { return obj instanceof Class; };
     var isValidClassPackageFormat = function( name ) {
         return classPackageREGEXP.test( name );
     };
     var isExistClassPackage = function( packageName ) {
-        return !isUndefined( classDefinitionStore[ packageName ] )
+        return !isUndefined( classBlueprintStore[ packageName ] )
     };
-    var setClassDefinition = function( packageName, obj ) {
+    var setClassBlueprint = function( packageName, obj ) {
         if ( !isValidClassPackageFormat( packageName ) ) {
             throw new Error( 'invalid class package name format @ ' + packageName );
         } else if ( isExistClassPackage( packageName ) ) {
             throw new Error( 'class package are exist @ ' + packageName );
         }
-        classDefinitionStore[ packageName ] = obj;
+        classBlueprintStore[ packageName ] = obj;
         return packageName;
     };
-    var getClassDefinition = function( packageName ) {
+    var getClassBlueprint = function( packageName ) {
         if ( !isValidClassPackageFormat( packageName ) ) {
             throw new Error( 'invalid class package name format @ ' + packageName );
         } else if ( !isExistClassPackage( packageName ) ) {
             throw new Error( 'class package not exist @ ' + packageName );
         }
-        return classDefinitionStore[ packageName ];
+        return classBlueprintStore[ packageName ];
     };
-    var makeClass = function( classPackageName, parentsPackageNameArr, classDefinition ) {
-        var definitionObj = {
+    var makeClassBlueprint = function( classPackageName, parentsPackageNameArr, classBlueprint ) {
+        var blueprint = {
             "$properties" : {},
-            "$methods" : {},
-            "$constructor" : false,
-            "$class" : false
+            "$classes" : {},
+            "$methods" : {}
         };
 
         if ( isArray( parentsPackageNameArr ) ) {
             each( parentsPackageNameArr, function( idx, parentsPackageName ) {
-                var classDefinition = getClassDefinition( parentsPackageName );
-                unify( definitionObj.$properties, classDefinition.$properties );
-                unify( definitionObj.$methods, classDefinition.$methods );
+                var classBlueprint = getClassBlueprint( parentsPackageName );
+                unify( blueprint.$properties, classBlueprint.$properties );
+                unify( blueprint.$classes, classBlueprint.$classes );
+                unify( blueprint.$methods, classBlueprint.$methods );
             } );
         }
 
-        each( classDefinition, function( key, value ) {
-            if ( classDefinition.hasOwnProperty( key ) ) {
+        each( classBlueprint, function( key, value ) {
+            if ( classBlueprint.hasOwnProperty( key ) ) {
                 if ( isFunction( value ) ) {
-                    definitionObj.$methods[ key ] = value;
+                    blueprint.$methods[ key ] = value;
+                } else if ( isClass( value ) ) {
+                    blueprint.$classes[ key ] = value;
                 } else {
-                    definitionObj.$properties[ key ] = value;
+                    blueprint.$properties[ key ] = value;
                 }
             }
         } );
 
+        setClassBlueprint( classPackageName, blueprint );
+        return classPackageName;
+    };
+    var makeClassInstance = function( classPackageName ) {
+        var blueprint = getClassBlueprint( classPackageName );
+        
         var child = function() {
             ( function( self ) {
-                unify( self, definitionObj.$properties );
+                unify( self, blueprint.$properties );
+                each( blueprint.$classes, function( key, blueprintTag ) {
+                    if ( isClassBlueprint( blueprintTag ) ) {
+                        self[ key ] = blueprintTag.get();
+                    }
+                } );
             } )( this );
         };
-        var Class = function() { /* ANONYMOUS FUNCTION */ };
 
         child.prototype = new Class();
-        unify( child.prototype, definitionObj.$methods );
+        unify( child.prototype, blueprint.$methods );
         child.prototype.constructor = child;
+        child.prototype.$package = classPackageName;
 
-        definitionObj.$class = child;
-        setClassDefinition( classPackageName, definitionObj );
-        return classPackageName;
+        return child;
     };
     var defineClass = function( classDefinition ) {
         var classPackageName = false,
@@ -240,25 +253,37 @@
             throw new Error( 'parent class package name must be array passed' );
         }
 
-        return makeClass( classPackageName, parentsPackageNameArr, classDefinition );
+        return makeClassBlueprint( classPackageName, parentsPackageNameArr, classDefinition );
     };
-    var applyClassMethod = function( classPackageName, classMethodName, argumentsArr, instance ) {
-        var classDefinition = getClassDefinition( classPackageName ),
+    var applyClassMethod = function( instance, classPackageName, classMethodName, argumentsArr ) {
+        var classDefinition = getClassBlueprint( classPackageName ),
             method = classDefinition.$methods[ classMethodName ];
-        instance = ( isObject( instance ) ) ? instance : arguments.caller;
         if ( !isFunction( method ) ) {
             throw new Error( 'not exist method in class definition @ ' + classPackageName );
         }
         return method.apply( instance, argumentsArr );
     };
     var createClassInstance = function( classPackageName, constructorArgv ) {
-        var definition = getClassDefinition( classPackageName ),
-            instantce = new ( definition.$class );
+        var blueprint = getClassBlueprint( classPackageName ),
+            instantce = new ( makeClassInstance( classPackageName ) );
         constructorArgv = isArray( constructorArgv ) ? constructorArgv : [];
-        if ( isFunction( definition.$methods[ classConstructorName ] ) ) {
-            applyClassMethod( classPackageName, classConstructorName, constructorArgv, instantce );
+        if ( isFunction( blueprint.$methods[ classConstructorName ] ) ) {
+            applyClassMethod( instantce, classPackageName, classConstructorName, constructorArgv );
         }
         return instantce;
+    };
+    var blueprintTag = function( classPackageName, constructorArgv ) {
+        this.packagename = classPackageName;
+        this.constructorArgv = constructorArgv;
+        this.get = function( ) {
+            return createClassInstance( this.classPackageName, this.constructorArgv );
+        };
+    };
+    var isClassBlueprint = function( obj ) {
+        return obj instanceof blueprintTag;
+    };
+    var makeBlueprintTag = function( classPackageName, constructorArgv ) {
+        return new blueprintTag( classPackageName, constructorArgv );
     };
 
     var QbigEngine = {
@@ -276,7 +301,8 @@
                 "isNull" : isNull,
                 "isUndefined" : isUndefined,
                 "isNumeric" : isNumeric,
-                "isPlainObject" : isPlainObject
+                "isPlainObject" : isPlainObject,
+                "isClass" : isClass
             },
             "unify" : unify,
             "each" : each
@@ -290,7 +316,8 @@
         "class" : {
             "define" : defineClass,
             "applyMethod" : applyClassMethod,
-            "create" : createClassInstance
+            "create" : createClassInstance,
+            "tagging" : makeBlueprintTag
         }
     };
     global.qbe = QbigEngine;
