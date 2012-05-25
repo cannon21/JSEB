@@ -1,6 +1,6 @@
 test('class define', function() {
     qbe.class.define({
-        "$package" : "com.qbigstudio.test/ds/stack",
+        "$package" : "com.qbigstudio.test.ds.stack",
         "data" : [],
         "capacity" : 0,
         "setCapacity" : function( capacity ) {
@@ -41,7 +41,7 @@ test('class define', function() {
     });
 
     var stackSize = 3;
-    var stack = qbe.class.create("com.qbigstudio.test/ds/stack", [ stackSize ]);
+    var stack = qbe.class.create("com.qbigstudio.test.ds.stack", [ stackSize ]);
 
     strictEqual( stack.getCapacity(), stackSize, "capacity 3" );
 
@@ -94,7 +94,7 @@ test('class define', function() {
 
 test('class extends', function() {
     qbe.class.define( {
-        "$package" : "com.qbigstudio.test/extend/parentClass",
+        "$package" : "com.qbigstudio.test.extend.parentClass",
         "name" : "parent",
         "getName" : function() {
             return this.name;
@@ -104,23 +104,23 @@ test('class extends', function() {
         }
     } );
 
-    var parent = qbe.class.create( "com.qbigstudio.test/extend/parentClass" );
+    var parent = qbe.class.create( "com.qbigstudio.test.extend.parentClass" );
     strictEqual( parent.getName(), "parent", "parent # getName > parent" );
     strictEqual( parent.setName( "parent set" ), "parent set", "parent # setName > parent set" );
 
     qbe.class.define( {
-        "$package" : "com.qbigstudio.test/extend/childClass",
-        "$parents" : [ "com.qbigstudio.test/extend/parentClass" ],
+        "$package" : "com.qbigstudio.test.extend.childClass",
+        "$parents" : [ "com.qbigstudio.test.extend.parentClass" ],
         "name" : "child",
         "getName" : function() {
             return "[ " + this.name + " ]";
         },
         "setName" : function( name ) {
-            return ( qbe.class.applyMethod( this, "com.qbigstudio.test/extend/parentClass", "setName", [ "{ " + name + " }" ] ) );
+            return ( qbe.class.applyMethod( this, "com.qbigstudio.test.extend.parentClass", "setName", [ "{ " + name + " }" ] ) );
         }
     } );
 
-    var child = qbe.class.create( "com.qbigstudio.test/extend/childClass" );
+    var child = qbe.class.create( "com.qbigstudio.test.extend.childClass" );
     strictEqual( child.getName(), "[ child ]", "child # getName > [ child ]" );
     strictEqual( child.setName( "child" ), "{ child }", "child # setName > { child }" );
     strictEqual( child.getName(), "[ { child } ]", "child # getName > [ { child } ]" );

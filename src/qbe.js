@@ -148,7 +148,7 @@
     // CLASS INHERITANCE
     var classConstructorName = "init",
         classBlueprintStore = {},
-        classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*(\/{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
+        classPackageREGEXP = /^[a-zA-Z]{1}[a-zA-Z0-9]*(\.{1}[a-zA-Z]{1}[a-zA-Z0-9]*)*$/;
     var Class = function() { /* ANONYMOUS FUNCTION */ },
         isClass = function( obj ) { return obj instanceof Class; };
     var isValidClassPackageFormat = function( name ) {
